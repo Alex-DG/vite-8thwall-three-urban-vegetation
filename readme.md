@@ -1,4 +1,4 @@
-# AR Experience - Urban Vegation 🍃🌷
+# AR Experience - Urban Vegetation 🍃🌷
 
 Give to the user the ability to grow random flowers on a field of grass swaying in the wind.
 
