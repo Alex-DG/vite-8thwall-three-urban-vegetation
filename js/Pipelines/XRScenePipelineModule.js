@@ -41,6 +41,7 @@ const setRenderer = ({ canvas, sizes, GLctx }) => {
 
   renderer.autoClear = false
   renderer.setSize(sizes.width, sizes.height)
+  // renderer.setPixelRatio(window.devicePixelRatio)
   renderer.outputEncoding = THREE.sRGBEncoding
   renderer.shadowMap.enabled = true
   renderer.shadowMap.type = THREE.PCFSoftShadowMap
@@ -146,6 +147,7 @@ export const initXRScenePipelineModule = () => {
       renderer.setSize(canvasWidth, canvasHeight)
     },
     onRender: () => {
+      // renderer.clear()
       renderer.clearDepth()
 
       if (needsPrerenderFinish) {
