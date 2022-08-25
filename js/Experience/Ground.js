@@ -1,35 +1,30 @@
-import * as THREE from 'three'
-
 import gsap from 'gsap'
 
 import { MeshSurfaceSampler } from 'three/examples/jsm/math/MeshSurfaceSampler'
+import ParticlesGroundMaterial from './Shaders/ParticlesGround/ParticlesGroundMaterial'
 
-import SurfaceParticles from './Shaders/SurfaceParticles/SurfaceParticles'
-
-class Surface {
+class Ground {
   constructor(options) {
-    const { scene } = options
-    this.scene = scene
-    this.isReady = false
+    this.scene = options.scene
+    this.numberParticles = options.numberParticles || 20000
+    this.isActive = false
   }
 
-  init(model) {
-    this.model = model.scene
+  init(mesh) {
+    this.mesh = mesh
 
-    this.mesh = model.scene.children[0]
-
-    this.particlesMaterial = new SurfaceParticles()
+    this.particlesMaterial = new ParticlesGroundMaterial()
 
     // Create a sampler for a Mesh surface.
     const sampler = new MeshSurfaceSampler(this.mesh)
       .setWeightAttribute('color')
       .build()
 
-    const numberParticles = 20000
+    const numberParticles = this.numberParticles
 
     this.particlesGeometry = new THREE.BufferGeometry()
 
-    const particlesPosition = new Float32Array(numberParticles * 3) // x,y,z
+    const particlesPosition = new Float32Array(numberParticles * 3)
     const particlesRandomness = new Float32Array(numberParticles * 3)
 
     for (let i = 0; i < numberParticles; i++) {
@@ -60,23 +55,22 @@ class Surface {
     /**
      * Particles
      */
-    // this.particles = new THREE.Points(
-    //   this.particlesGeometry,
-    //   this.particlesMaterial
-    // )
-    // //   this.particles.scale.multiplyScalar(1.1)
-    // this.particles.position.y = 0.1
+    this.particles = new THREE.Points(
+      this.particlesGeometry,
+      this.particlesMaterial
+    )
+    this.particles.position.y = 0.1
 
-    // this.add()
+    this.add()
   }
 
   add() {
     this.scene.add(this.particles)
 
     gsap.to(this.particlesMaterial.uniforms.uScale, {
-      value: 1.01,
-      duration: 0.8,
-      delay: 0.3,
+      value: 1.02,
+      duration: 1.5,
+      delay: 0.5,
       ease: 'power3.out',
     })
 
@@ -97,7 +91,7 @@ class Surface {
     //   ease: 'power3.in',
     // })
 
-    // if (!this.isReady) {
+    // if (!this.isActive) {
     //   gsap.fromTo(
     //     this.particles.rotation,
     //     {
@@ -111,7 +105,7 @@ class Surface {
     //   )
     // }
 
-    this.isReady = true
+    this.isActive = true
   }
 
   remove() {
@@ -121,7 +115,7 @@ class Surface {
       ease: 'power3.out',
       onComplete: () => {
         this.scene.remove(this.particles)
-        this.isReady = false
+        this.isActive = false
       },
     })
 
@@ -133,10 +127,10 @@ class Surface {
   }
 
   update() {
-    if (this.isReady) {
-      //   this.particlesMaterial.uniforms.uTime.value = performance.now() / 1000
+    if (this.isActive) {
+      this.particlesMaterial.uniforms.uTime.value = performance.now() / 1000
     }
   }
 }
 
-export default Surface
+export default Ground

@@ -19,9 +19,9 @@ class ParticleSystem {
     for (let i = 0; i < count; i++) {
       positionArray.set(
         [
-          (Math.random() - 0.5) * 20, // -1 to 1
+          (Math.random() - 0.5) * 10,
           Math.random() * 20,
-          (Math.random() - 0.5) * 20,
+          (Math.random() - 0.5) * 10,
         ],
         i * 3
       )

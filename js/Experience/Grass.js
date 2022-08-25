@@ -17,21 +17,36 @@ class Grass {
     this.camera = options.camera
     this.textureLoader = options.textureLoader
 
-    const resolution = options.resolution || 64 / 4
-    const width = options.width || 50 / 4
+    const resolution = options.resolution || 4 //6 / 10
+    const width = options.width || 4 //50 / 10
 
     this.config = {
       width, // Patch side length
       resolution, // Number of vertices on ground plane side
-      instances: options.instances || 4000 / 7, // Number of blades
+      instances: options.instances || 7000, // Number of blades
       delta: width / resolution, // Distance between two ground plane vertices
-      radius: options.radius || 240, // Radius of the sphere onto which the ground plane is bent
+      radius: options.radius || 150, // Radius of the sphere onto which the ground plane is bent
       blade: {
         joints: 4,
-        bladeWidth: 0.12,
-        bladeHeight: 0.9,
+        // bladeWidth: 0.12,
+        // bladeHeight: 0.9,
+        bladeWidth: 0.012,
+        bladeHeight: 0.09,
       },
     }
+
+    // Mesh Surface Sampler / Instanced Mesh - Setup
+    this.ages = new Float32Array(this.config.instances)
+    this.growthSpeed = new Float32Array(this.config.instances) // each sunflower has a different growth speed
+    this.scales = new Float32Array(this.config.instances)
+    this.dummy = new THREE.Object3D()
+
+    this.currentPoint = new THREE.Vector3()
+    this.position = new THREE.Vector3()
+    this.positions = []
+    this.normal = new THREE.Vector3()
+    this.normals = []
+    this.scale = new THREE.Vector3()
 
     this.init()
   }
@@ -39,8 +54,6 @@ class Grass {
   async init() {
     await this.setTextures()
     this.setGrass()
-
-    this.isReady = true
   }
 
   async setTextures() {
@@ -66,13 +79,13 @@ class Grass {
     const { bladeWidth, bladeHeight, joints } = blade
 
     // Define base geometry that will be instanced. We use a plane for an individual blade of grass
-    const grassBaseGeometry = new THREE.PlaneBufferGeometry(
+    this.grassBaseGeometry = new THREE.PlaneBufferGeometry(
       bladeWidth,
       bladeHeight,
       1,
       joints
     )
-    grassBaseGeometry.translate(0, blade.bladeHeight / 2, 0)
+    this.grassBaseGeometry.translate(0, blade.bladeHeight / 2, 0)
 
     // Define the bend of the grass blade as the combination of three quaternion rotations
     let vertex = new THREE.Vector3()
@@ -120,28 +133,29 @@ class Grass {
     // Bend grass base geometry for more organic look
     for (
       let v = 0;
-      v < grassBaseGeometry.attributes.position.array.length;
+      v < this.grassBaseGeometry.attributes.position.array.length;
       v += 3
     ) {
       quaternion2.setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI / 2)
-      vertex.x = grassBaseGeometry.attributes.position.array[v]
-      vertex.y = grassBaseGeometry.attributes.position.array[v + 1]
-      vertex.z = grassBaseGeometry.attributes.position.array[v + 2]
+      vertex.x = this.grassBaseGeometry.attributes.position.array[v]
+      vertex.y = this.grassBaseGeometry.attributes.position.array[v + 1]
+      vertex.z = this.grassBaseGeometry.attributes.position.array[v + 2]
       let frac = vertex.y / blade.bladeHeight
       quaternion2.slerp(quaternion0, frac)
       vertex.applyQuaternion(quaternion2)
-      grassBaseGeometry.attributes.position.array[v] = vertex.x
-      grassBaseGeometry.attributes.position.array[v + 1] = vertex.y
-      grassBaseGeometry.attributes.position.array[v + 2] = vertex.z
+      this.grassBaseGeometry.attributes.position.array[v] = vertex.x
+      this.grassBaseGeometry.attributes.position.array[v + 1] = vertex.y
+      this.grassBaseGeometry.attributes.position.array[v + 2] = vertex.z
     }
-    grassBaseGeometry.computeVertexNormals()
+    this.grassBaseGeometry.computeVertexNormals()
 
     const instancedGeometry = new THREE.InstancedBufferGeometry()
-    instancedGeometry.index = grassBaseGeometry.index
+    instancedGeometry.index = this.grassBaseGeometry.index
     instancedGeometry.attributes.position =
-      grassBaseGeometry.attributes.position
-    instancedGeometry.attributes.uv = grassBaseGeometry.attributes.uv
-    instancedGeometry.attributes.normal = grassBaseGeometry.attributes.normal
+      this.grassBaseGeometry.attributes.position
+    instancedGeometry.attributes.uv = this.grassBaseGeometry.attributes.uv
+    instancedGeometry.attributes.normal =
+      this.grassBaseGeometry.attributes.normal
 
     // Each instance has its own data for position, orientation and scale
     const indices = []
@@ -196,35 +210,42 @@ class Grass {
     })
 
     this.grass = new THREE.Mesh(instancedGeometry, this.grassMaterial)
-    this.grass.scale.set(0.25, 0.25, 0.25)
-    this.grass.position.z = -10
-    this.scene.add(this.grass)
+    // this.grass.scale.set(0.25, 0.25, 0.25)
+    // this.grass.position.z = -10
+    // this.scene.add(this.grass)
   }
 
-  setSampler(model) {
-    // const mesh = model.scene.children[0]
-    // const sampler = new MeshSurfaceSampler(mesh)
-    //   .setWeightAttribute('color')
-    //   .build()
-    // const geometry = this.grass.geometry
-    // const position = new Float32Array(this.config.instances * 3) // x,y,z
-    // const randomness = new Float32Array(this.config.instances * 3)
-    // for (let i = 0; i < this.config.instances; i++) {
-    //   const pos = new THREE.Vector3()
-    //   sampler.sample(pos)
-    //   position.set([pos.x, pos.y, pos.z], i * 3)
-    //   randomness.set(
-    //     [
-    //       Math.random() * 2 - 1, // -1 to 1
-    //       Math.random() * 2 - 1,
-    //       Math.random() * 2 - 1,
-    //     ],
-    //     i * 3
-    //   )
-    // }
-    // geometry.setAttribute('position', new THREE.BufferAttribute(position, 3))
-    // geometry.setAttribute('aRandom', new THREE.BufferAttribute(randomness, 3))
-    // this.scene.add(this.grass)
+  setSampler(model, mergedGeometriesMesh) {
+    const sampler = new MeshSurfaceSampler(mergedGeometriesMesh)
+      .setWeightAttribute('uv')
+      .build()
+
+    const geometry = this.grass.geometry
+    const material = this.grassMaterial
+
+    const count = this.config.instances
+
+    this.grass2 = new THREE.InstancedMesh(geometry, material, count)
+
+    const _position = new THREE.Vector3()
+    const _matrix = new THREE.Matrix4()
+
+    // Sample randomly from the surface, creating an instance of the sample
+    // geometry at each sample point.
+    for (let i = 0; i < count; i++) {
+      sampler.sample(_position)
+
+      _matrix.makeTranslation(_position.x, _position.y, _position.z)
+
+      this.grass2.setMatrixAt(i, _matrix)
+    }
+
+    this.grass2.instanceMatrix.needsUpdate = true
+    // this.grass2.scale.multiplyScalar(0.25)
+    // this.grass2.position.z = -3.5
+    this.scene.add(this.grass2)
+
+    this.isReady = true
   }
 
   update() {
