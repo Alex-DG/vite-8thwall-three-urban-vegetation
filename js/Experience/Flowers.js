@@ -163,6 +163,7 @@ class Flowers {
     center.copy(boundingSphere.center)
 
     const surfaceGeometry = new THREE.CircleGeometry(size, 32)
+    // const surfaceMaterial = new THREE.MeshNormalMaterial()
     const surfaceMaterial = new THREE.ShadowMaterial({
       transparent: true,
       opacity: 0.4,

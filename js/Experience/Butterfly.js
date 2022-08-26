@@ -22,14 +22,16 @@ class Butterfly {
 
     this.butterflies = []
 
-    this.path = {
-      start: {
-        x: this.parentGroup.position.x,
-        y: this.parentGroup.position.y,
-        z: this.parentGroup.position.z,
-      },
-      end: { x: 0.5, y: 1, z: 0.5 },
-    }
+    this.path = null
+
+    // this.path = {
+    //   start: {
+    //     x: this.parentGroup.position.x,
+    //     y: this.parentGroup.position.y,
+    //     z: this.parentGroup.position.z,
+    //   },
+    //   end: { x: 0.5, y: 1, z: 0.5 },
+    // }
 
     this.clock = new THREE.Clock()
     this.elapsedTime = 0
@@ -83,32 +85,31 @@ class Butterfly {
   }
 
   attachModel(model) {
-    // const geo = model.geometry
-    // const sphere = geo.boundingSphere
-    // const box = geo.boundingBox
-    // // this.parentGroup.position.copy(sphere)
-    // console.log({ model, sphere })
-    // this.path = {
-    //   start: {
-    //     x: box.min.x,
-    //     y: 1,
-    //     z: box.min.z,
-    //   },
-    //   end: { x: box.max.x, y: 1, z: box.max.z },
-    // }
+    const box = model.geometry.boundingBox
+
+    this.path = {
+      start: {
+        x: box.min.x,
+        y: 1,
+        z: model.position.z + 0.5,
+      },
+      end: { x: box.max.x, y: 1, z: model.position.z + 0.5 },
+    }
   }
 
   updateFlyingPath() {
-    const { start, end } = this.path
+    if (this.path) {
+      const { start, end } = this.path
 
-    const newX = lerp(start.x, end.x, ease(this.t)) // interpolate between start and end where
-    const newY = lerp(start.y, end.y, ease(this.t)) // t is first passed through a easing
-    const newZ = lerp(start.z, end.z, ease(this.t)) // function in this example.
+      const newX = lerp(start.x, end.x, ease(this.t)) // interpolate between start and end where
+      const newY = lerp(start.y, end.y, ease(this.t)) // t is first passed through a easing
+      const newZ = lerp(start.z, end.z, ease(this.t)) // function in this example.
 
-    this.parentGroup.position.set(newX, newY, newZ) // set new position
+      this.parentGroup.position.set(newX, newY, newZ) // set new position
 
-    this.t += this.dt
-    if (this.t <= 0 || this.t >= 1) this.dt = -1 * this.dt
+      this.t += this.dt * 0.1
+      if (this.t <= 0 || this.t >= 1) this.dt = -1 * this.dt
+    }
   }
 
   update() {

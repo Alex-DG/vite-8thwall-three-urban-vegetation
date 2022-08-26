@@ -50,7 +50,7 @@ export const initWorldPipelineModule = () => {
       ground,
       flowers,
       butterfly,
-      name: 'shop',
+      name: 'hachiko',
     })
 
     /*-----------------------------------------------------------*/
