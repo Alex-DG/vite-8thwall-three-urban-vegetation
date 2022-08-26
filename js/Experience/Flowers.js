@@ -1,5 +1,6 @@
 import { getRandomFloat } from './Utils/Maths'
 import { createFlower, generateFlowerURLS } from './Utils/Data/Flower'
+import { gsap } from 'gsap'
 
 const FLOWERS_COUNT = 25
 
@@ -33,7 +34,7 @@ class Flowers {
     this.bind()
 
     this.setTouchEvent()
-    this.setSurface()
+    // this.setSurface()
     await this.setFlowers()
 
     this.isReady = true
@@ -41,23 +42,24 @@ class Flowers {
 
   bind() {
     this.placeObjectTouchHandler = this.placeObjectTouchHandler.bind(this)
+    this.onTouchEnd = this.onTouchEnd.bind(this)
     this.animateIn = this.animateIn.bind(this)
   }
 
   ////////////////////////////////////////////////////////////////////////////////////////////////
 
-  animateIn(pointX, pointZ, rotationY) {
-    const totalFlowers = getRandomFloat(1, 5)
+  animateIn(point, rotationY) {
+    const totalFlowers = getRandomFloat(1, 2)
     const flowers = []
 
     for (let i = 0; i < totalFlowers; i++) {
       const items = this.flowerModels
       const randomFlower = items[Math.floor(Math.random() * items.length)]
-      const flower = createFlower(pointX, pointZ, rotationY, randomFlower)
+      const flower = createFlower(point, rotationY, randomFlower)
 
       const scale = {
         value: flower.scale.clone(),
-        maxScale: getRandomFloat(0.3, 0.6),
+        maxScale: getRandomFloat(0.1, 0.2, 3),
       }
 
       this.flowers.push(flower)
@@ -67,6 +69,27 @@ class Flowers {
       flowers.push(flower)
     }
     this.scene.add(...flowers)
+  }
+
+  onTouchEnd() {
+    this.model?.scene?.traverse((child) => {
+      if (child?.userData.blink) {
+        child.material = this.modelMaterials[child.userData.index]
+        child.userData.blink = false
+
+        gsap.fromTo(
+          child.material,
+          {
+            opacity: 0,
+          },
+          {
+            opacity: 1,
+            duration: 1,
+            ease: 'power3.out',
+          }
+        )
+      }
+    })
   }
 
   placeObjectTouchHandler(event) {
@@ -88,13 +111,33 @@ class Flowers {
 
     // Raycast against the "surface" object.
     const intersects = this.raycaster.intersectObject(this.surface)
+
     if (intersects.length > 0) {
       const intersect = intersects[0]
       if (intersect) {
-        const { point } = intersect
         const rotationY = Math.random() * 360
 
-        this.animateIn(point.x, point.z, rotationY)
+        this.model?.scene?.traverse((child) => {
+          if (!child?.userData.blink) {
+            child.material = this.blinkMaterial
+            child.userData.blink = true
+
+            gsap.fromTo(
+              child.material,
+              {
+                opacity: 0,
+              },
+              {
+                opacity: 1,
+                duration: 1.5,
+                // delay: 0.2,
+                ease: 'power3.out',
+              }
+            )
+          }
+        })
+
+        this.animateIn(intersect.point, rotationY)
       }
     }
   }
@@ -107,18 +150,27 @@ class Flowers {
       this.placeObjectTouchHandler,
       true
     )
+
+    this.canvas.addEventListener('touchend', this.onTouchEnd, true)
   }
 
-  setSurface() {
-    const surfaceGeometry = new THREE.PlaneGeometry(100, 100, 1, 1)
+  setSurface(ground) {
+    ground.geometry.computeBoundingSphere()
+    const boundingSphere = ground.geometry.boundingSphere
+
+    const size = boundingSphere.radius
+    const center = new THREE.Vector3()
+    center.copy(boundingSphere.center)
+
+    const surfaceGeometry = new THREE.CircleGeometry(size, 32)
     const surfaceMaterial = new THREE.ShadowMaterial({
       transparent: true,
-      opacity: 0.6,
+      opacity: 0.4,
     })
 
     this.surface = new THREE.Mesh(surfaceGeometry, surfaceMaterial)
     this.surface.rotateX(-Math.PI / 2)
-    this.surface.position.set(0, 0, 0)
+    this.surface.position.set(center.x, 0.01, center.z)
     this.surface.receiveShadow = true
     this.scene.add(this.surface)
   }
@@ -141,7 +193,6 @@ class Flowers {
             material.emissiveIntensity = 1
             material.emissiveMap = map
             material.color.convertSRGBToLinear()
-            material.depthWrite = false
 
             map.encoding = THREE.sRGBEncoding
           }
@@ -150,6 +201,12 @@ class Flowers {
     } catch (error) {
       console.error('❌', { error })
     }
+  }
+
+  attachBlinkData(data) {
+    this.model = data.model
+    this.modelMaterials = data.materials
+    this.blinkMaterial = data.blinkMaterial
   }
 
   update() {
@@ -162,7 +219,7 @@ class Flowers {
         let growthSpeed = this.growthSpeed[index]
         let scale = this.scales[index].value
 
-        growthSpeed += getRandomFloat(0.02, 0.03, 3)
+        growthSpeed += getRandomFloat(0.01, 0.02, 3)
         scale.x += growthSpeed
         scale.y += growthSpeed
         scale.z += growthSpeed

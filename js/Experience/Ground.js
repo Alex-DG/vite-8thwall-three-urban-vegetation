@@ -6,8 +6,9 @@ import ParticlesGroundMaterial from './Shaders/ParticlesGround/ParticlesGroundMa
 class Ground {
   constructor(options) {
     this.scene = options.scene
+    this.flowers = options.flowers
     this.numberParticles = options.numberParticles || 20000
-    this.isActive = false
+    this.isReady = false
   }
 
   init(mesh) {
@@ -59,13 +60,15 @@ class Ground {
       this.particlesGeometry,
       this.particlesMaterial
     )
-    this.particles.position.y = 0.1
+    this.particles.position.y = mesh.position.y + 0.1
 
     this.add()
   }
 
   add() {
+    this.isReady = true
     this.scene.add(this.particles)
+    this.flowers.setSurface(this.particles)
 
     gsap.to(this.particlesMaterial.uniforms.uScale, {
       value: 1.02,
@@ -73,61 +76,10 @@ class Ground {
       delay: 0.5,
       ease: 'power3.out',
     })
-
-    // const tl = gsap.timeline()
-    // tl.fromTo(
-    //   this.particlesMaterial.uniforms.uScale,
-    //   { value: 0 },
-    //   {
-    //     value: 1.5,
-    //     duration: 1,
-    //     delay: 0.3,
-    //     ease: 'power3.out',
-    //   }
-    // )
-    // tl.to(this.particlesMaterial.uniforms.uScale, {
-    //   value: 1.0,
-    //   duration: 1,
-    //   ease: 'power3.in',
-    // })
-
-    // if (!this.isActive) {
-    //   gsap.fromTo(
-    //     this.particles.rotation,
-    //     {
-    //       y: Math.PI,
-    //     },
-    //     {
-    //       y: 0,
-    //       duration: 0.8,
-    //       ease: 'power3.out',
-    //     }
-    //   )
-    // }
-
-    this.isActive = true
-  }
-
-  remove() {
-    gsap.to(this.particlesMaterial.uniforms.uScale, {
-      value: 0,
-      duration: 0.8,
-      ease: 'power3.out',
-      onComplete: () => {
-        this.scene.remove(this.particles)
-        this.isActive = false
-      },
-    })
-
-    gsap.to(this.particles.rotation.uScale, {
-      y: Math.PI,
-      duration: 0.8,
-      ease: 'power3.out',
-    })
   }
 
   update() {
-    if (this.isActive) {
+    if (this.isReady) {
       this.particlesMaterial.uniforms.uTime.value = performance.now() / 1000
     }
   }

@@ -1,17 +1,21 @@
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 
 import Flowers from '../Experience/Flowers'
-import Hachiko from '../Experience/Hachiko'
+import Model from '../Experience/Model'
+import Ground from '../Experience/Ground'
 import ParticleSystem from '../Experience/ParticleSystem'
 
 import LoadingManager from '../Experience/Utils/LoadingManager'
+import Butterfly from '../Experience/Butterfly'
 
 export const initWorldPipelineModule = () => {
   let progress = 0
 
   let particleSystem
   let flowers
-  let hachiko
+  let ground
+  let model
+  let butterfly
 
   const init = () => {
     const { scene, camera, canvas } = XR8.Threejs.xrScene()
@@ -38,22 +42,26 @@ export const initWorldPipelineModule = () => {
     /*-----------------------------------------------------------*/
     particleSystem = new ParticleSystem({ scene, count: 1000 })
     flowers = new Flowers({ scene, camera, canvas, gltfLoader })
-    hachiko = new Hachiko({ scene, gltfLoader })
+    ground = new Ground({ scene, flowers })
+    // butterfly = new Butterfly({ scene, gltfLoader })
+    model = new Model({ scene, gltfLoader, ground, flowers, name: 'shop' })
 
     /*-----------------------------------------------------------*/
     /* Progress                                                  */
     /*-----------------------------------------------------------*/
     LoadingManager.onProgress = (_, loaded, total) => {
       progress = (loaded / total) * 100 || 0
-      console.log('⏳', `Loading ${Number(progress).toFixed(0)}%`)
+      // console.log('⏳', `Loading ${Number(progress).toFixed(0)}%`)
       if (progress >= 100) console.log('✅', 'World ready')
     }
   }
 
   const updateWorld = () => {
     particleSystem?.update()
+    ground?.update()
     flowers?.update()
-    hachiko?.update()
+    model?.update()
+    // butterfly?.update()
   }
 
   return {

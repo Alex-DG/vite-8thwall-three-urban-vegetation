@@ -3,7 +3,7 @@ import ParticleMaterial from './Shaders/Particles/ParticleMaterial'
 class ParticleSystem {
   constructor(options) {
     this.scene = options.scene
-    this.count = options.count || 5000
+    this.count = options.count || 2500
     this.init()
   }
 
@@ -44,9 +44,7 @@ class ParticleSystem {
   }
 
   update() {
-    if (this.particleMaterial) {
-      this.particleMaterial.uniforms.uTime.value = performance.now()
-    }
+    this.particleMaterial.uniforms.uTime.value = performance.now()
   }
 }
 

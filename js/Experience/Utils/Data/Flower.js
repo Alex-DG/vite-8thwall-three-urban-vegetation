@@ -11,14 +11,14 @@ export const generateFlowerURLS = (count) => {
   return urls
 }
 
-export const createFlower = (pointX, pointZ, rotationY, flower) => {
+export const createFlower = (point, rotationY, flower) => {
   const f = flower.scene.clone()
   const { position, rotation } = f
-  position.set(pointX, 0, pointZ)
+  position.set(point.x, 0.1, point.z)
   rotation.set(0.0, rotationY, 0.0)
 
   // Position
-  const randomPosition = getRandomSpherePoint(position, 1 / 1.25)
+  const randomPosition = getRandomSpherePoint(position, 0.4)
   f.position.copy(randomPosition)
 
   // Rotate
