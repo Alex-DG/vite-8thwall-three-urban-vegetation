@@ -43,8 +43,15 @@ export const initWorldPipelineModule = () => {
     particleSystem = new ParticleSystem({ scene, count: 1000 })
     flowers = new Flowers({ scene, camera, canvas, gltfLoader })
     ground = new Ground({ scene, flowers })
-    // butterfly = new Butterfly({ scene, gltfLoader })
-    model = new Model({ scene, gltfLoader, ground, flowers, name: 'shop' })
+    butterfly = new Butterfly({ scene, gltfLoader })
+    model = new Model({
+      scene,
+      gltfLoader,
+      ground,
+      flowers,
+      butterfly,
+      name: 'shop',
+    })
 
     /*-----------------------------------------------------------*/
     /* Progress                                                  */
@@ -61,7 +68,7 @@ export const initWorldPipelineModule = () => {
     ground?.update()
     flowers?.update()
     model?.update()
-    // butterfly?.update()
+    butterfly?.update()
   }
 
   return {

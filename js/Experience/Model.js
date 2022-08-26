@@ -4,6 +4,7 @@ class Model {
   constructor(options) {
     this.scene = options.scene
     this.ground = options.ground
+    this.butterfly = options.butterfly
     this.flowers = options.flowers
     this.name = options.name || 'hachiko'
     this.path = `../../assets/models/${this.name}.glb`
@@ -46,6 +47,7 @@ class Model {
         materials,
         model,
       })
+      this.butterfly.attachModel(model.scene.children[0])
     } catch (error) {
       console.error({ error })
     }

@@ -27,3 +27,11 @@ export const getRandomSpherePoint = (position, radius, is2D = true) => {
 
   return p
 }
+
+export const lerp = (a, b, t) => {
+  return a + (b - a) * t
+}
+
+export const ease = (t) => {
+  return t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t
+}
