@@ -56,6 +56,15 @@ class Butterfly {
         '../../assets/models/flying_butterfly.glb'
       )
 
+      model.scene.traverse((child) => {
+        if (child instanceof THREE.Mesh) {
+          const material = child.material
+          const map = material.map
+          map.encoding = THREE.sRGBEncoding
+          material.color.setHex(Math.random() * 0xffffff)
+        }
+      })
+
       this.mixer = new THREE.AnimationMixer(model.scene)
       this.action = this.mixer.clipAction(model.animations[0])
       this.action.play()
