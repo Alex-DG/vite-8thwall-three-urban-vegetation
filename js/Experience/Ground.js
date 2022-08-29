@@ -11,9 +11,12 @@ class Ground {
     this.isReady = false
   }
 
-  init(mesh) {
+  attachData(mesh) {
     this.mesh = mesh
+    this.init()
+  }
 
+  init() {
     this.particlesMaterial = new ParticlesGroundMaterial()
 
     // Create a sampler for a Mesh surface.
@@ -60,7 +63,7 @@ class Ground {
       this.particlesGeometry,
       this.particlesMaterial
     )
-    this.particles.position.y = mesh.position.y + 0.1
+    this.particles.position.y = this.mesh.position.y + 0.1
 
     this.add()
   }

@@ -36,16 +36,16 @@ class Butterfly {
 
   ////////////////////////////////////////////////////////////////////////
 
-  attachModel(model) {
-    const box = model.geometry.boundingBox
+  attachData(mesh) {
+    const box = mesh.geometry.boundingBox
 
     this.path = {
       start: {
         x: box.min.x,
         y: 1,
-        z: model.position.z + 0.5,
+        z: mesh.position.z + 0.5,
       },
-      end: { x: box.max.x, y: 1, z: model.position.z + 0.5 },
+      end: { x: box.max.x, y: 1, z: mesh.position.z + 0.5 },
     }
 
     for (let i = 0; i < this.instances; i++) this.createButterfly()

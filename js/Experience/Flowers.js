@@ -72,7 +72,7 @@ class Flowers {
   }
 
   onTouchEnd() {
-    this.model?.scene?.traverse((child) => {
+    this.model?.traverse((child) => {
       if (child?.userData.blink) {
         child.material = this.modelMaterials[child.userData.index]
         child.userData.blink = false
@@ -117,7 +117,7 @@ class Flowers {
       if (intersect) {
         const rotationY = Math.random() * 360
 
-        this.model?.scene?.traverse((child) => {
+        this.model?.traverse((child) => {
           if (!child?.userData.blink) {
             child.material = this.blinkMaterial
             child.userData.blink = true
@@ -204,8 +204,8 @@ class Flowers {
     }
   }
 
-  attachBlinkData(data) {
-    this.model = data.model
+  attachData(data) {
+    this.model = data.mesh
     this.modelMaterials = data.materials
     this.blinkMaterial = data.blinkMaterial
   }

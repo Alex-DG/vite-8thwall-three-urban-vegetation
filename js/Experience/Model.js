@@ -40,14 +40,18 @@ class Model {
         }
       })
 
-      this.scene.add(model.scene)
-      this.ground.init(model.scene.children[0])
-      this.flowers.attachBlinkData({
+      const mesh = model.scene.children[0]
+      const flowersData = {
         blinkMaterial,
         materials,
-        model,
-      })
-      this.butterfly.attachModel(model.scene.children[0])
+        mesh,
+      }
+
+      this.scene.add(model.scene)
+
+      this.ground.attachData(mesh)
+      this.butterfly.attachData(mesh)
+      this.flowers.attachData(flowersData)
     } catch (error) {
       console.error({ error })
     }
