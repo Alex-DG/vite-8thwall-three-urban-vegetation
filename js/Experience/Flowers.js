@@ -1,6 +1,7 @@
 import { getRandomFloat } from './Utils/Maths'
 import { createFlower, generateFlowerURLS } from './Utils/Data/Flower'
 import { gsap } from 'gsap'
+import EventEmitter from './Utils/EventEmitter'
 
 const FLOWERS_COUNT = 25
 
@@ -42,7 +43,7 @@ class Flowers {
 
   bind() {
     this.placeObjectTouchHandler = this.placeObjectTouchHandler.bind(this)
-    this.onTouchEnd = this.onTouchEnd.bind(this)
+    this.placeObjectTouchHandlerEnd = this.placeObjectTouchHandlerEnd.bind(this)
     this.animateIn = this.animateIn.bind(this)
   }
 
@@ -71,25 +72,8 @@ class Flowers {
     this.scene.add(...flowers)
   }
 
-  onTouchEnd() {
-    this.model?.traverse((child) => {
-      if (child?.userData.blink) {
-        child.material = this.modelMaterials[child.userData.index]
-        child.userData.blink = false
-
-        gsap.fromTo(
-          child.material,
-          {
-            opacity: 0,
-          },
-          {
-            opacity: 1,
-            duration: 1,
-            ease: 'power3.out',
-          }
-        )
-      }
-    })
+  placeObjectTouchHandlerEnd() {
+    EventEmitter.emit('flower:addedEnd')
   }
 
   placeObjectTouchHandler(event) {
@@ -117,25 +101,7 @@ class Flowers {
       if (intersect) {
         const rotationY = Math.random() * 360
 
-        this.model?.traverse((child) => {
-          if (!child?.userData.blink) {
-            child.material = this.blinkMaterial
-            child.userData.blink = true
-
-            gsap.fromTo(
-              child.material,
-              {
-                opacity: 0,
-              },
-              {
-                opacity: 1,
-                duration: 1.5,
-                // delay: 0.2,
-                ease: 'power3.out',
-              }
-            )
-          }
-        })
+        EventEmitter.emit('flower:added', `${rotationY}`)
 
         this.animateIn(intersect.point, rotationY)
       }
@@ -151,7 +117,11 @@ class Flowers {
       true
     )
 
-    this.canvas.addEventListener('touchend', this.onTouchEnd, true)
+    this.canvas.addEventListener(
+      'touchend',
+      this.placeObjectTouchHandlerEnd,
+      true
+    )
   }
 
   setSurface(ground) {
@@ -202,12 +172,6 @@ class Flowers {
     } catch (error) {
       console.error('❌', { error })
     }
-  }
-
-  attachData(data) {
-    this.model = data.mesh
-    this.modelMaterials = data.materials
-    this.blinkMaterial = data.blinkMaterial
   }
 
   update() {

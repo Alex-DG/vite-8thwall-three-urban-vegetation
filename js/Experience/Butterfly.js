@@ -1,6 +1,8 @@
 import { FBM } from 'three-noise'
 import { ease, lerp } from './Utils/Maths'
 
+import EventEmitter from './Utils/EventEmitter'
+
 import * as SkeletonUtils from 'three/examples/jsm/utils/SkeletonUtils'
 
 class Butterfly {
@@ -30,8 +32,20 @@ class Butterfly {
     this.init()
   }
 
+  bind() {
+    this.onFlowerAdded = this.onFlowerAdded.bind(this)
+  }
+
   async init() {
+    this.bind()
+    EventEmitter.on('flower:added', this.onFlowerAdded)
     await this.setButterfly()
+  }
+
+  ////////////////////////////////////////////////////////////////////////
+
+  onFlowerAdded(name) {
+    this.createButterfly(name)
   }
 
   ////////////////////////////////////////////////////////////////////////
@@ -48,7 +62,7 @@ class Butterfly {
       end: { x: box.max.x, y: 1, z: mesh.position.z + 0.5 },
     }
 
-    for (let i = 0; i < this.instances; i++) this.createButterfly()
+    // for (let i = 0; i < this.instances; i++) this.createButterfly()
   }
 
   playAnimation(mixer) {
@@ -66,16 +80,21 @@ class Butterfly {
     this.mixers.push(mixer)
   }
 
-  createButterfly(index) {
+  createButterfly(name) {
     const butterflyClone = SkeletonUtils.clone(this.butterfly)
-    butterflyClone.name = `butterfly-${index}`
+    butterflyClone.name = `butterfly-${name}`
     butterflyClone.traverse((child) => {
       if (child instanceof THREE.Mesh) {
-        const mat = child.material.clone()
+        const map = child.material.map
+        const mat = new THREE.MeshStandardMaterial({
+          side: THREE.DoubleSide,
+          map,
+        })
+
         mat.color.setHex(Math.random() * 0xffffff)
         mat.emissive = new THREE.Color(Math.random() * 0xffffff)
         mat.emissiveIntensity = Math.random()
-        mat.emissiveMap = mat.map
+        mat.emissiveMap = map
         child.material = mat
       }
     })
@@ -83,7 +102,7 @@ class Butterfly {
     butterflyClone.position.x = 2 * Math.random()
 
     const group = new THREE.Group()
-    group.scale.multiplyScalar(Math.random() + 0.1)
+    group.scale.multiplyScalar(Math.abs(Math.random() * 2 - 1))
     group.rotation.y = 100 * Math.random()
     group.add(butterflyClone)
 
